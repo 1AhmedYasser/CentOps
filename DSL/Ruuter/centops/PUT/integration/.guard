@@ -1,4 +1,3 @@
-# guard for integration
 check_for_basic_auth:
   switch:
     - condition: ${incoming.headers == null || incoming.headers.authorization == null}
