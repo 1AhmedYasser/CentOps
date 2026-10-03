@@ -1,7 +1,7 @@
 declaration:
   call: declare
   version: 0.1
-  description: "Validates API client credentials against api_clients table"
+  description: "Validates API client credentials against api_clients table and returns the client identity and roles"
   method: post
   accepts: json
   returns: json
@@ -72,7 +72,7 @@ assign_encoded_auth_data:
 check_client_credentials:
   call: http.post
   args:
-    url: "[#CENTOPS_RESQL]/validate-api-client"
+    url: "[#CENTOPS_RESQL]/get-api-client-by-credentials"
     body:
       api_key: ${api_key_base64}
       api_secret: ${api_secret_base64}
@@ -82,13 +82,13 @@ check_client_credentials:
 
 check_validation_result:
   switch:
-    - condition: ${db_result.response.body[0].isValid === true}
+    - condition: ${db_result.response.body != null && db_result.response.body[0] != null}
       next: return_authorized
   next: return_unauthorized
 
 return_authorized:
   status: 200
-  return: true
+  return: ${db_result.response.body[0]}
   next: end
 
 return_unauthorized:

@@ -1,0 +1,30 @@
+# guard for integration
+check_for_basic_auth:
+  switch:
+    - condition: ${incoming.headers == null || incoming.headers.authorization == null}
+      next: guard_fail
+  next: authenticate
+
+authenticate:
+  template: "[#CENTOPS_PROJECT_LAYER]/validate-api-client"
+  requestType: templates
+  headers:
+    authorization: ${incoming.headers.authorization}
+  result: is_valid
+  next: check_validity
+
+check_validity:
+  switch:
+    - condition: ${is_valid !== "false"}
+      next: guard_success
+  next: guard_fail
+
+guard_success:
+  return: "success"
+  status: 200
+  next: end
+
+guard_fail:
+  return: "unauthorized"
+  status: 401
+  next: end

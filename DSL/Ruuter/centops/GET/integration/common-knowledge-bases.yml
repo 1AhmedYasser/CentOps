@@ -1,0 +1,97 @@
+declaration:
+  call: declare
+  version: 0.1
+  description: "List Common Knowledge Base information for all clients, or for a single client when a client id path parameter is given"
+  method: get
+  accepts: json
+  returns: json
+  namespace: centops
+  allowlist:
+    params:
+      - field: pathParams
+        type: array
+        description: "Optional client id path parameter"
+    headers:
+      - field: authorization
+        type: string
+        description: "Base64 encoded API key:secret"
+
+assign_parameters:
+  assign:
+    client_id: "${incoming.params.pathParams == null ? null : incoming.params.pathParams[0]}"
+  next: get_api_client
+
+get_api_client:
+  template: "[#CENTOPS_PROJECT_LAYER]/validate-api-client"
+  requestType: templates
+  headers:
+    authorization: ${incoming.headers.authorization}
+  result: api_client
+  next: check_api_client
+
+check_api_client:
+  switch:
+    - condition: ${api_client == null || api_client === false || api_client === "false"}
+      next: return_unauthorized
+    - condition: ${client_id == null}
+      next: check_global_classifier_role
+  next: check_common_knowledge_base_role
+
+check_global_classifier_role:
+  switch:
+    - condition: ${api_client.apiRoles != null && api_client.apiRoles.includes("GLOBAL_CLASSIFIER")}
+      next: get_ckb_information_list
+  next: return_forbidden
+
+check_common_knowledge_base_role:
+  switch:
+    - condition: ${api_client.apiRoles != null && api_client.apiRoles.includes("COMMON_KNOWLEDGE_BASE") && api_client.clientId != null && api_client.clientId.toLowerCase() === client_id.toLowerCase()}
+      next: get_ckb_information
+  next: return_forbidden
+
+get_ckb_information_list:
+  call: http.get
+  args:
+    url: "[#CENTOPS_RESQL]/get-ckb-information-list"
+  result: ckb_list_result
+  next: return_ckb_information_list
+
+return_ckb_information_list:
+  status: 200
+  return: ${ckb_list_result.response.body}
+  next: end
+
+get_ckb_information:
+  call: http.get
+  args:
+    url: "[#CENTOPS_RESQL]/get-ckb-information"
+    query:
+      client_id: ${client_id}
+  result: ckb_result
+  next: check_ckb_information
+
+check_ckb_information:
+  switch:
+    - condition: ${ckb_result.response.body[0] == null}
+      next: return_not_found
+  next: return_ckb_information
+
+return_ckb_information:
+  status: 200
+  return: ${ckb_result.response.body[0]}
+  next: end
+
+return_unauthorized:
+  status: 401
+  return: "unauthorized"
+  next: end
+
+return_forbidden:
+  status: 403
+  return: "forbidden"
+  next: end
+
+return_not_found:
+  status: 404
+  return: "Common Knowledge Base information not found"
+  next: end

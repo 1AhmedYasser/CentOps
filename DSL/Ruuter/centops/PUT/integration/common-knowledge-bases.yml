@@ -1,0 +1,86 @@
+declaration:
+  call: declare
+  version: 0.1
+  description: "Update Common Knowledge Base information for a client"
+  method: put
+  accepts: json
+  returns: json
+  namespace: centops
+  allowlist:
+    body:
+      - field: presigned_url
+        type: string
+      - field: presigned_url_etag
+        type: string
+    params:
+      - field: pathParams
+        type: array
+        description: "Client id path parameter"
+    headers:
+      - field: authorization
+        type: string
+        description: "Base64 encoded API key:secret"
+
+assign_parameters:
+  assign:
+    client_id: "${incoming.params.pathParams == null ? null : incoming.params.pathParams[0]}"
+    presigned_url: "${incoming.body == null ? null : incoming.body.presigned_url}"
+    presigned_url_etag: "${incoming.body == null ? null : incoming.body.presigned_url_etag}"
+  next: validate_request
+
+validate_request:
+  switch:
+    - condition: ${client_id == null || typeof presigned_url !== "string" || presigned_url.trim() === "" || typeof presigned_url_etag !== "string" || presigned_url_etag.trim() === ""}
+      next: return_bad_request
+  next: get_api_client
+
+get_api_client:
+  template: "[#CENTOPS_PROJECT_LAYER]/validate-api-client"
+  requestType: templates
+  headers:
+    authorization: ${incoming.headers.authorization}
+  result: api_client
+  next: check_api_client
+
+check_api_client:
+  switch:
+    - condition: ${api_client == null || api_client === false || api_client === "false"}
+      next: return_unauthorized
+  next: check_common_knowledge_base_role
+
+check_common_knowledge_base_role:
+  switch:
+    - condition: ${api_client.apiRoles != null && api_client.apiRoles.includes("COMMON_KNOWLEDGE_BASE") && api_client.clientId != null && api_client.clientId.toLowerCase() === client_id.toLowerCase()}
+      next: update_ckb_information
+  next: return_forbidden
+
+update_ckb_information:
+  call: http.post
+  args:
+    url: "[#CENTOPS_RESQL]/upsert-ckb-information"
+    body:
+      client_id: ${client_id}
+      presigned_url: ${presigned_url}
+      presigned_url_etag: ${presigned_url_etag}
+  result: update_result
+  next: return_updated
+
+return_updated:
+  status: 200
+  return: ${update_result.response.body[0]}
+  next: end
+
+return_bad_request:
+  status: 400
+  return: "client id path parameter, presigned_url and presigned_url_etag are required"
+  next: end
+
+return_unauthorized:
+  status: 401
+  return: "unauthorized"
+  next: end
+
+return_forbidden:
+  status: 403
+  return: "forbidden"
+  next: end
