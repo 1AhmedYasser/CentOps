@@ -1,4 +1,4 @@
-import {DockerComposeEnvironment, log} from 'testcontainers';
+import {DockerComposeEnvironment, log, Wait} from 'testcontainers';
 
 let environment;
 
@@ -6,7 +6,10 @@ export async function setup() {
     try {
         // Start the Docker Compose environment
         environment = await new DockerComposeEnvironment('.', './docker-compose-test.yml')
-            .withStartupTimeout(60_000)
+            .withStartupTimeout(120_000)
+            .withWaitStrategy('liquibase-test', Wait.forOneShotStartup())
+            .withWaitStrategy('ruuter-test', Wait.forLogMessage(/Started RuuterApplication/))
+            .withWaitStrategy('resql-test', Wait.forLogMessage(/Started SqlmsApplication/))
             .up();
 
         console.log('[testcontainers] Router is running');

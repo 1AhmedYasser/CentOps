@@ -52,6 +52,11 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
       - ../../init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U byk -d centops_db"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
     networks:
       - bykstack-test
 
@@ -105,7 +110,8 @@ services:
     networks:
       - bykstack-test
     depends_on:
-      - database-test
+      database-test:
+        condition: service_healthy
     volumes:
       - ../../DSL/Liquibase/:/liquibase/changelog/
       - ./liquibase.properties/:/liquibase/changelog/liquibase.properties
