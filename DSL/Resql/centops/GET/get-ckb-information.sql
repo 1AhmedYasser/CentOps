@@ -4,4 +4,6 @@ SELECT client_id,
        created_at,
        updated_at
 FROM ckb_information
-WHERE client_id = :client_id::uuid;
+WHERE client_id = :client_id::uuid
+ORDER BY id DESC
+LIMIT 1;

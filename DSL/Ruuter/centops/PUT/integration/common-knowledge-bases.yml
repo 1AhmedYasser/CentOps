@@ -53,23 +53,23 @@ check_api_client:
 check_common_knowledge_base_role:
   switch:
     - condition: ${api_client.apiRoles != null && api_client.apiRoles.includes("COMMON_KNOWLEDGE_BASE") && api_client.clientId != null && api_client.clientId.toLowerCase() === client_id.toLowerCase()}
-      next: update_ckb_information
+      next: insert_ckb_information
   next: return_forbidden
 
-update_ckb_information:
+insert_ckb_information:
   call: http.post
   args:
-    url: "[#CENTOPS_RESQL]/upsert-ckb-information"
+    url: "[#CENTOPS_RESQL]/insert-ckb-information"
     body:
       client_id: ${client_id}
       presigned_url: ${presigned_url}
       presigned_url_etag: ${presigned_url_etag}
-  result: update_result
+  result: insert_result
   next: return_updated
 
 return_updated:
   status: 200
-  return: ${update_result.response.body[0]}
+  return: ${insert_result.response.body[0]}
   next: end
 
 return_bad_request:
