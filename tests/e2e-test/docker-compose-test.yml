@@ -62,7 +62,7 @@ services:
 
   data-mapper-test:
     container_name: data-mapper-test
-    image: ghcr.io/buerokratt/datamapper:v2.2.14
+    image: ghcr.io/buerokratt/datamapper:v3.3.2
     environment:
       - PORT=9054
       - CONTENT_FOLDER=/data

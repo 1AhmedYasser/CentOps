@@ -1,16 +1,16 @@
 declaration:
   call: declare
   version: 0.1
-  description: "List Common Knowledge Base information for all clients, or for a single client when a client id path parameter is given"
+  description: "List Common Knowledge Base information for all clients, or for a single client when a client_id query parameter is given"
   method: get
   accepts: json
   returns: json
   namespace: centops
   allowlist:
     params:
-      - field: pathParams
-        type: array
-        description: "Optional client id path parameter"
+      - field: client_id
+        type: string
+        description: "Optional client id query parameter"
     headers:
       - field: authorization
         type: string
@@ -18,7 +18,7 @@ declaration:
 
 assign_parameters:
   assign:
-    client_id: "${incoming.params.pathParams == null ? null : incoming.params.pathParams[0]}"
+    client_id: ${incoming.params.client_id}
   next: get_api_client
 
 get_api_client:

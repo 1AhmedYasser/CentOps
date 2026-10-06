@@ -13,9 +13,9 @@ declaration:
       - field: presigned_url_etag
         type: string
     params:
-      - field: pathParams
-        type: array
-        description: "Client id path parameter"
+      - field: client_id
+        type: string
+        description: "Client id query parameter"
     headers:
       - field: authorization
         type: string
@@ -23,7 +23,7 @@ declaration:
 
 assign_parameters:
   assign:
-    client_id: "${incoming.params.pathParams == null ? null : incoming.params.pathParams[0]}"
+    client_id: ${incoming.params.client_id}
     presigned_url: "${incoming.body == null ? null : incoming.body.presigned_url}"
     presigned_url_etag: "${incoming.body == null ? null : incoming.body.presigned_url_etag}"
   next: validate_request
@@ -74,7 +74,7 @@ return_updated:
 
 return_bad_request:
   status: 400
-  return: "client id path parameter, presigned_url and presigned_url_etag are required"
+  return: "client_id query parameter, presigned_url and presigned_url_etag are required"
   next: end
 
 return_unauthorized:

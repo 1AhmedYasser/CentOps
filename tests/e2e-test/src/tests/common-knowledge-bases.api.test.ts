@@ -42,11 +42,11 @@ afterAll(async () => {
 
 describe('Common Knowledge Bases E2E', () => {
     it.each([
-        ['PUT without auth', HTTP_METHODS.PUT, `/${clientId}`, undefined, v1, 401],
-        ['PUT with missing etag', HTTP_METHODS.PUT, `/${clientId}`, CKB, { presigned_url: v1.presigned_url }, 400],
-        ['PUT with GLOBAL_CLASSIFIER role', HTTP_METHODS.PUT, `/${clientId}`, GC, v1, 403],
-        ['PUT for another client', HTTP_METHODS.PUT, `/${otherClientId}`, CKB, v1, 403],
-        ['GET single for another client', HTTP_METHODS.GET, `/${otherClientId}`, CKB, undefined, 403],
+        ['PUT without auth', HTTP_METHODS.PUT, `?client_id=${clientId}`, undefined, v1, 401],
+        ['PUT with missing etag', HTTP_METHODS.PUT, `?client_id=${clientId}`, CKB, { presigned_url: v1.presigned_url }, 400],
+        ['PUT with GLOBAL_CLASSIFIER role', HTTP_METHODS.PUT, `?client_id=${clientId}`, GC, v1, 403],
+        ['PUT for another client', HTTP_METHODS.PUT, `?client_id=${otherClientId}`, CKB, v1, 403],
+        ['GET single for another client', HTTP_METHODS.GET, `?client_id=${otherClientId}`, CKB, undefined, 403],
         ['GET list with COMMON_KNOWLEDGE_BASE role', HTTP_METHODS.GET, '', CKB, undefined, 403]
     ])('should reject %s', async (_, method, path, creds, body, status) => {
         const response = await request(path, method, creds, body);
@@ -54,7 +54,7 @@ describe('Common Knowledge Bases E2E', () => {
     });
 
     it('should insert CKB information for own client', async () => {
-        const response = await request(`/${clientId}`, HTTP_METHODS.PUT, CKB, v1);
+        const response = await request(`?client_id=${clientId}`, HTTP_METHODS.PUT, CKB, v1);
         expect(response.status).toBe(200);
 
         const { response: data } = await response.json();
@@ -63,7 +63,7 @@ describe('Common Knowledge Bases E2E', () => {
     });
 
     it('should append a new version on update and keep createdAt', async () => {
-        const response = await request(`/${clientId}`, HTTP_METHODS.PUT, CKB, v2);
+        const response = await request(`?client_id=${clientId}`, HTTP_METHODS.PUT, CKB, v2);
         expect(response.status).toBe(200);
         expect((await response.json()).response).toMatchObject({ presignedUrl: v2.presigned_url, createdAt });
 
@@ -72,7 +72,7 @@ describe('Common Knowledge Bases E2E', () => {
     });
 
     it('should return latest CKB information for own client', async () => {
-        const response = await request(`/${clientId}`, HTTP_METHODS.GET, CKB);
+        const response = await request(`?client_id=${clientId}`, HTTP_METHODS.GET, CKB);
         expect(response.status).toBe(200);
         expect((await response.json()).response).toMatchObject({ clientId, presignedUrl: v2.presigned_url, createdAt });
     });
