@@ -6,7 +6,8 @@ import { ENDPOINTS, GLOBAL_CONSTANTS, HTTP_METHODS } from '../setup/config';
 const BASE_URL = `${GLOBAL_CONSTANTS.BASE_URL}${GLOBAL_CONSTANTS.API_PREFIX}${ENDPOINTS.COMMON_KNOWLEDGE_BASES}`;
 const clientId = randomUUID();
 const otherClientId = randomUUID();
-const clientName = `ckb-client-${Date.now()}`;
+// 'zz-' keeps this client last in the name-ordered client list that other tests read concurrently
+const clientName = `zz-ckb-client-${Date.now()}`;
 
 const CKB = { key: `ckb-${Date.now()}`, secret: 'ckb-secret' };
 const GC = { key: `gc-${Date.now()}`, secret: 'gc-secret' };
