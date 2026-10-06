@@ -19,6 +19,12 @@ declaration:
 assign_parameters:
   assign:
     client_id: ${incoming.params.client_id}
+  next: validate_request
+
+validate_request:
+  switch:
+    - condition: ${client_id != null && client_id.trim() === ""}
+      next: return_bad_request
   next: get_api_client
 
 get_api_client:
@@ -79,6 +85,11 @@ check_ckb_information:
 return_ckb_information:
   status: 200
   return: ${ckb_result.response.body[0]}
+  next: end
+
+return_bad_request:
+  status: 400
+  return: "client_id must not be empty"
   next: end
 
 return_unauthorized:

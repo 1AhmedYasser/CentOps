@@ -32,7 +32,7 @@ validate_request:
   switch:
     - condition: ${client_id == null || typeof presigned_url !== "string" || typeof presigned_url_etag !== "string"}
       next: return_bad_request
-    - condition: ${presigned_url.trim() === "" || presigned_url_etag.trim() === ""}
+    - condition: ${client_id.trim() === "" || presigned_url.trim() === "" || presigned_url_etag.trim() === ""}
       next: return_bad_request
   next: get_api_client
 
